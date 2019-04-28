@@ -1,4 +1,5 @@
 const contentful = require('contentful')
+const contentfulRenderer = require('@contentful/rich-text-html-renderer');
 
 class ContentfulSource {
   static defaultOptions () {
@@ -80,6 +81,12 @@ class ContentfulSource {
           )
         } else if (typeof value === 'object' && typeof value.sys !== 'undefined') {
           fields[key] = this.createReferenceField(value)
+        } else if (typeof value === 'object' && value.nodeType === 'document') {
+          // value is Rich Text
+          fields[key] = {
+            document: JSON.stringify(value),
+            html: contentfulRenderer.documentToHtmlString(value)
+          }
         } else {
           fields[key] = value
         }
@@ -109,6 +116,7 @@ class ContentfulSource {
   }
 
   createReferenceField (item) {
+    console.log('item', item)
     switch (item.sys.type) {
       case 'Asset' :
         return {
